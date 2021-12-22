@@ -3,9 +3,7 @@ import requests
 import asyncio
 import threading
 import random
-import argparse
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+
 from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 
@@ -17,10 +15,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 sqlalchemy = SQLAlchemy()
 sqlalchemy.init_app(app)
 db = SQLAlchemy(app)
-
-DEVELOPER_KEY = 'AIzaSyDKYsF__QLc1WVvFkHR-oXThiuLz3dmtZ8'
-YOUTUBE_API_SERVICE_NAME = 'youtube'
-YOUTUBE_API_VERSION = 'v3'
 
 
 class Youtubedata(db.Model):
@@ -51,61 +45,10 @@ class Youtubedata(db.Model):
         return '<Youtube %r>' % self.title
 
 
-def addtodatabase(dicttoparse):
-    title = dicttoparse["title"]
-    description = dicttoparse["description"]
-    thumbnails = dicttoparse["thumbnails"]["default"]["url"]
-    thumbnailsm = dicttoparse["thumbnails"]["medium"]["url"]
-    thumbnailsh = dicttoparse["thumbnails"]["high"]["url"]
-    channelTitle = dicttoparse["channelTitle"]
-    publishedAt = dicttoparse["publishedAt"]
-
-    Youtubedata(title=title, description=description, thumbnail=thumbnails, thumbnailm=thumbnailsm,
-                thumbnailh=thumbnailsh, published_at=publishedAt, channel_title=channelTitle)
-
-
-def youtube_search(options):
-    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-                    developerKey=DEVELOPER_KEY)
-
-    # Call the search.list method to retrieve results matching the specified
-    # query term.
-    search_response = youtube.search().list(
-        q=options.q,
-        part='id,snippet',
-        maxResults=options.max_results
-    ).execute()
-
-    for eachvideo in search_response["items"][[]]:
-        print(eachvideo["id"]["videoId"])
-
-    videos = []
-    channels = []
-    playlists = []
-
-    # Add each result to the appropriate list, and then display the lists of
-    # matching videos, channels, and playlists.
-    for search_result in search_response.get('items', []):
-        if search_result['id']['kind'] == 'youtube#video':
-            addtodatabase(search_result['snippet'])
-            videos.append('%s (%s)' % (search_result['snippet']['title'],
-                                       search_result['id']['videoId']))
-        elif search_result['id']['kind'] == 'youtube#channel':
-            channels.append('%s (%s)' % (search_result['snippet']['title'],
-                                         search_result['id']['channelId']))
-        elif search_result['id']['kind'] == 'youtube#playlist':
-            playlists.append('%s (%s)' % (search_result['snippet']['title'],
-                                          search_result['id']['playlistId']))
-
-    print('Videos:\n', '\n'.join(videos), '\n')
-    print('Channels:\n', '\n'.join(channels), '\n')
-    print('Playlists:\n', '\n'.join(playlists), '\n')
-
-
 @app.route('/')
 def index():
     youtubedata = Youtubedata.query.all()
-    return render_template('index.html', youtubedata=youtubedata)
+    return render_template('index.html', youtubedata = youtubedata)
 
 
 @app.route('/json', methods=['GET', 'POST'])
@@ -188,6 +131,7 @@ async def get_youtube():
             print(e)
 
         await asyncio.sleep(10)
+
 
 
 # Function for initialising Async Loop

@@ -24,6 +24,15 @@ def youtube_search(options):
         maxResults=options.max_results
     ).execute()
 
+    for eachvideo in search_response["items"][[]]:
+        print(eachvideo["id"]["videoId"])
+
+    print("")
+    print("")
+    print(search_response)
+    print("")
+    print("")
+
     videos = []
     channels = []
     playlists = []
@@ -49,7 +58,7 @@ def youtube_search(options):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--q', help='Search term', default='Google')
-    parser.add_argument('--max-results', help='Max results', default=25)
+    parser.add_argument('--max-results', help='Max results', default=10)
     args = parser.parse_args()
 
     try:
